@@ -1,4 +1,4 @@
-package com.kakopay.payments.controller;
+package com.kakopay.payments.api.controller;
 
 
 import org.springframework.web.bind.annotation.GetMapping;
