@@ -29,11 +29,4 @@ public class CancelInfo {
 
     @Column(name="manage_id")
     private String manageId;            // 결제관리번호
-
-    @Builder
-    public CancelInfo(String cancelType, int cancelAmount, int cancelVat) {
-        this.cancelType = cancelType;
-        this.cancelAmount = cancelAmount;
-        this.cancelVat = cancelVat;
-    }
 }

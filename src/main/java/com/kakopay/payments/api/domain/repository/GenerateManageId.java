@@ -1,6 +1,7 @@
 package com.kakopay.payments.api.domain.repository;
 
 import antlr.StringUtils;
+import com.kakopay.payments.api.util.Constants;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.id.IdentifierGenerator;
@@ -16,7 +17,7 @@ public class GenerateManageId implements IdentifierGenerator {
     public Serializable generate(SharedSessionContractImplementor session, Object object) throws HibernateException {
 
         String prefix = "P";
-        int idSize = 20;
+        int idSize = Constants.PayStatementSize.MANAGE_ID;
 
         Connection connection = session.connection();
         try{

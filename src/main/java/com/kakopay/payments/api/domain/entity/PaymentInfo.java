@@ -1,20 +1,17 @@
 package com.kakopay.payments.api.domain.entity;
 
-import jdk.jfr.Enabled;
-import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.GenericGenerator;
 
 import javax.persistence.*;
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.List;
 
 @NoArgsConstructor
 @Entity
 @Data
-public class PaymentsInfo {
+public class PaymentInfo {
 
     @Id
     @GenericGenerator(name="manage_id", strategy = "com.kakopay.payments.api.domain.repository.GenerateManageId")
@@ -40,15 +37,6 @@ public class PaymentsInfo {
     @OneToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
     @JoinColumn(name = "manage_id")
     private List<CancelInfo> cancelList;    // 취소거래 FK
-
-    @Builder
-    public PaymentsInfo(int installment, String payType, String payStatement, int amount, int vat) {
-        this.installment = installment;
-        this.payType = payType;
-        this.payStatement = payStatement;
-        this.amount = amount;
-        this.vat = vat;
-    }
 
     public void addCancelInfo(CancelInfo cancelInfo){
         if(cancelList == null){

@@ -6,7 +6,9 @@ import com.kakopay.payments.api.dto.CardInfo;
 import org.junit.jupiter.api.Test;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 
 import org.springframework.http.MediaType;
@@ -27,7 +29,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 
-@WebMvcTest(MainController.class)
+//@WebMvcTest(MainController.class)
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK)
+@AutoConfigureMockMvc
 class MainControllerTest {
 
     @Autowired
@@ -36,7 +40,7 @@ class MainControllerTest {
     @Autowired
     private ObjectMapper objectMapper;
 
-    @Test
+    //@Test
     public void getTest() throws Exception{
 
         MultiValueMap<String, String> mvm = new LinkedMultiValueMap<String, String>();
@@ -58,12 +62,12 @@ class MainControllerTest {
         map.put("cardNumber", "1234567812345678");
         map.put("expirationDate", "1120");
         map.put("cvc", "987");
-        map.put("installment", 1);
+        map.put("installment", 0);
         map.put("amount", 1000);
         map.put("vat", 10);
 
         String mapJson = objectMapper.writeValueAsString(map);
-        RequestBuilder requestBuilder = MockMvcRequestBuilders.post("/reqPay")
+        RequestBuilder requestBuilder = MockMvcRequestBuilders.post("/reqPayment")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(mapJson);
 
@@ -71,8 +75,9 @@ class MainControllerTest {
                 .andExpect(status().isOk())
                 .andDo(print())
                 .andReturn();
-        String content2 = result.getResponse().getContentAsString();
+        String responseJson = result.getResponse().getContentAsString();
 
+        System.out.println("response = "+ responseJson);
 
 
         //        MultiValueMap<String, String> mvm = new LinkedMultiValueMap<String, String>();

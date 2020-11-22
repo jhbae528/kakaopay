@@ -6,8 +6,4 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class CardInfoTest {
 
-    @Test
-    void getConcatenation() {
-
-    }
 }
