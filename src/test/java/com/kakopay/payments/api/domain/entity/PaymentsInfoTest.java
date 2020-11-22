@@ -17,6 +17,9 @@ class PaymentsInfoTest {
                 .vat(100)
                 .build();
 
-
+        assertEquals("PAYMENT", paymentsInfo.getPayType());
+        assertEquals("abcde", paymentsInfo.getPayStatement());
+        assertEquals(1000, paymentsInfo.getAmount());
+        assertEquals(100, paymentsInfo.getVat());
     }
 }
