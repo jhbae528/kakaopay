@@ -36,12 +36,12 @@ class MainControllerTest {
     private ObjectMapper objectMapper;
 
 
-    //@Test
+    @Test
     public void reqPay() throws Exception {
         requestPayment();
     }
 
-    //@Test
+    @Test
     public void reqCancel() throws Exception{
         String manageId = requestPayment();
         requestCancel(manageId);
@@ -56,7 +56,7 @@ class MainControllerTest {
         requestReadData(cancelManageId);
     }
 
-    //@Test
+    @Test
     public void reqReadList() throws Exception{
         String manageId = requestPayment();
         requestCancel(manageId);

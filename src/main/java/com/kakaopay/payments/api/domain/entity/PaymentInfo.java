@@ -39,16 +39,6 @@ public class PaymentInfo {
     @Column(name = "origin_manage_id")
     private String originManageId;          // 취소시 원거래관리번호
 
-//    @OneToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
-//    @JoinColumn(name = "manage_id")
-//    private List<CancelInfo> cancelList;    // 취소거래 FK
-//
-//    public void addCancelInfo(CancelInfo cancelInfo){
-//        if(cancelList == null){
-//            cancelList = new ArrayList<CancelInfo>();
-//        }
-//        cancelList.add(cancelInfo);
-//    }
 
     @Builder
     public PaymentInfo(String manageId, String payType, int installment, int amount, int vat, String payStatement, String originManageId){

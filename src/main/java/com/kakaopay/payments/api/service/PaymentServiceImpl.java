@@ -14,7 +14,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Service
@@ -93,17 +95,22 @@ public class PaymentServiceImpl implements PaymentService{
         if(opPaymentInfo.isPresent()){
             PaymentInfo paymentInfo = opPaymentInfo.get();
             CardInfo cardInfo = extractCardInfo(paymentInfo.getPayStatement());
+            maskingCardInfo(cardInfo);
 
             AmountInfo amountInfo = AmountInfo.builder()
                     .amount(paymentInfo.getAmount())
                     .vat(paymentInfo.getVat())
                     .build();
 
+            Map<String, Object> optionalMap = new HashMap<String, Object>();
+            optionalMap.put("installment", amountInfo.getInstallment());
+
             ResponseDto responseDto = ResponseDto.builder()
                     .manageId(paymentInfo.getManageId())
                     .cardInfo(cardInfo)
                     .payType(paymentInfo.getPayType())
                     .amountInfo(amountInfo)
+                    .optionalData(optionalMap)
                     .build();
             return responseDto;
         }else{
@@ -201,5 +208,22 @@ public class PaymentServiceImpl implements PaymentService{
         logger.debug("decData = " + decData);
 
         return DataConvertor.objectCardInfo(decData);   // 카드정보 객체 변환
+    }
+
+    /**
+     * 카드번호 마스킹
+     * @param cardInfo
+     */
+    private void maskingCardInfo(CardInfo cardInfo) {
+        String cardNumber = cardInfo.getCardNumber();
+        StringBuffer sb = new StringBuffer(cardNumber.substring(0, 6));
+
+        int midSize = cardNumber.length() - 9;
+        while(midSize > 0) {
+            sb.append('*');
+            midSize--;
+        }
+        sb.append(cardNumber.substring(cardNumber.length() - 3, cardNumber.length()));
+        cardInfo.setCardNumber(sb.toString());
     }
 }

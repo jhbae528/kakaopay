@@ -19,9 +19,6 @@ public class CancelInfo {
     @Column(name = "cancel_id", length = 20)
     private String cancelId;            // 취소관리번호
 
-    //@Column(name = "cancel_type", length = 10)
-    //private String cancelType;          // 취소 유형
-
     @Column(name = "cancel_amount")
     private int cancelAmount;           // 취소금액
 

@@ -4,9 +4,12 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.io.Serializable;
+import java.util.Map;
+
 @Getter
 @Setter
-public class ResponseDto {
+public class ResponseDto implements Serializable {
 
     private String manageId;        // 관리번호
 
@@ -18,11 +21,11 @@ public class ResponseDto {
 
     private String payType;         // 결제 / 취소 구분
     
-    private String optionalData;    // 추가 데이터
+    private Map<String, Object> optionalData;    // 추가 데이터
 
     @Builder
     public ResponseDto(String manageId, CardInfo cardInfo, AmountInfo amountInfo,
-                       String payStatement, String payType, String optionalData){
+                       String payStatement, String payType, Map<String, Object> optionalData){
         this.manageId = manageId;
         this.cardInfo = cardInfo;
         this.amountInfo = amountInfo;
