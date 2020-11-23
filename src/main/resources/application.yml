@@ -26,3 +26,5 @@ spring:
     database-paltform: org.hibernate.dialect.H2Dialect
 
 logging.level.org.hibernate.SQL: debug
+logging.level.com.kakaopay.payments.api: debug
+spring.output.ansi.enabled: always
