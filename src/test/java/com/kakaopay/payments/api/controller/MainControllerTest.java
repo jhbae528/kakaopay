@@ -35,20 +35,37 @@ class MainControllerTest {
     @Autowired
     private ObjectMapper objectMapper;
 
+
     //@Test
-    public void getTest() throws Exception{
+    public void reqPay() throws Exception {
+        requestPayment();
+    }
 
-        MultiValueMap<String, String> mvm = new LinkedMultiValueMap<String, String>();
-        mvm.add("name", "bae");
-        mvm.add("id", "123");
+    //@Test
+    public void reqCancel() throws Exception{
+        String manageId = requestPayment();
+        requestCancel(manageId);
+    }
 
-        RequestBuilder requestBuilder = MockMvcRequestBuilders.get("/get_test").contentType(MediaType.APPLICATION_JSON).params(mvm);
+    @Test
+    public void reqReadData() throws Exception{
+        String manageId = requestPayment();
+        requestReadData(manageId);
 
-        MvcResult result = mockMvc.perform(requestBuilder)
-                .andExpect(status().isOk())
-                .andDo(print())
-                .andReturn();
-        String content = result.getResponse().getContentAsString();
+        String cancelManageId = requestCancel(manageId);
+        requestReadData(cancelManageId);
+    }
+
+    //@Test
+    public void reqReadList() throws Exception{
+        String manageId = requestPayment();
+        requestCancel(manageId);
+        requestCancel(manageId);
+
+        String manageId2 = requestPayment();
+        requestCancel(manageId2);
+
+        requestPaymentList();
     }
 
     // 통신 메서드
@@ -92,12 +109,26 @@ class MainControllerTest {
 
         Map<String, Object> reqMap = new HashMap<String, Object>();
         reqMap.put("manageId", manageId);
-        reqMap.put("amount", 5000);
-        reqMap.put("vat", 400);
+        reqMap.put("amount", 3000);
+        reqMap.put("vat", 280);
 
         String requestJson = objectMapper.writeValueAsString(reqMap);
 
         String responseJson = requestComm(requestJson, "/reqCancel");
+        logger.debug("###  responseJson = " + responseJson);
+
+        Map<String, Object> responseMap = objectMapper.readValue(responseJson, new TypeReference<Map<String, Object>>(){});
+        String cancelManageId = (String)responseMap.get("manageId");
+        String payStatement = (String)responseMap.get("payStatement");
+        logger.debug("###  cancelManageId = " + cancelManageId);
+        logger.debug("###  payStatement = " + payStatement);
+
+        return cancelManageId;
+    }
+
+    private String requestReadData(String manageId) throws Exception{
+
+        String responseJson = requestComm(manageId, "/reqReadData");
         logger.debug("###  responseJson = " + responseJson);
 
         Map<String, Object> responseMap = objectMapper.readValue(responseJson, new TypeReference<Map<String, Object>>(){});
@@ -114,13 +145,5 @@ class MainControllerTest {
         String responseJson = requestComm("", "/reqPaymentList");
         logger.debug("###  responseJson = " + responseJson);
         return null;
-    }
-
-    @Test
-    public void reqPay() throws Exception {
-
-        String manageId = requestPayment();
-        String cancelManageId = requestCancel(manageId);
-        requestPaymentList();
     }
 }

@@ -7,9 +7,6 @@ public class Constants {
     public static final String PAY_APPROVE = "PAYMENT"; // 결제
     public static final String PAY_CANCEL = "CANCEL";   // 취소
 
-    public static final String CANCEL_ALL = "ALL";      // 전체 취소
-    public static final String CANCEL_PART = "PART";    // 부분 취소
-
     public static final int DATA_TYPE_NUM = 0;          // 숫자
     public static final int DATA_TYPE_NUM_ZERO = 1;     // 숫자
     public static final int DATA_TYPE_NUM_LEFT = 2;     // 숫자
@@ -19,8 +16,8 @@ public class Constants {
     public class PayStatementSize{  // string 데이터 명세
 
         // 공통헤더부문
-        public static final int DATA_SIZE = 4;           // 데이터 길이
-        public static final int PAY_TYPE = 10;         // 데이터 구분
+        public static final int DATA_SIZE = 4;          // 데이터 길이
+        public static final int PAY_TYPE = 10;          // 데이터 구분
         public static final int MANAGE_ID = 20;         // 관리번호
 
         // 데이터부문

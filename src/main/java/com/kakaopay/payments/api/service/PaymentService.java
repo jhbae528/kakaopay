@@ -8,12 +8,12 @@ import java.util.List;
 
 public interface PaymentService {
 
-    public ResponseDto doPayment(RequestDto requestDto);
+    public ResponseDto processPayment(RequestDto requestDto) throws Exception;
 
-    public ResponseDto doCancel(RequestDto requestDto);
+    public ResponseDto processCancel(RequestDto requestDto) throws Exception;
 
-    public ResponseDto doReadData(String manageId);
+    public ResponseDto processReadPayment(String manageId) throws Exception;
 
-    public List<PaymentInfo> doPaymentList();
+    public List<PaymentInfo> processReadPaymentList() throws Exception;
 
 }

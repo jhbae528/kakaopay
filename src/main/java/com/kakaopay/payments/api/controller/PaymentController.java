@@ -4,12 +4,12 @@ package com.kakaopay.payments.api.controller;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kakaopay.payments.api.domain.entity.PaymentInfo;
+import com.kakaopay.payments.api.dto.AmountInfo;
+import com.kakaopay.payments.api.dto.CardInfo;
 import com.kakaopay.payments.api.dto.RequestDto;
 import com.kakaopay.payments.api.dto.ResponseDto;
 import com.kakaopay.payments.api.service.PaymentService;
 import com.kakaopay.payments.api.util.Constants;
-import com.kakaopay.payments.api.dto.AmountInfo;
-import com.kakaopay.payments.api.dto.CardInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,24 +30,13 @@ public class PaymentController {
     @Autowired
     private PaymentService paymentService;
 
-    @GetMapping("/get_test")
-    public String getTest(@RequestParam String name, @RequestParam String id) {
-        logger.debug("##############  here !! ");
-        return "getTest = " + name + ", " + id;
-    }
 
     // 결제 API
     @PostMapping("/reqPayment")
-    public String requestPayment(@RequestBody String reqParam) {
+    public String requestPayment(@RequestBody String reqParam) throws Exception {
 
-        AmountInfo amountInfo = null;
-        CardInfo cardInfo = null;
-        try {
-            amountInfo = objectMapper.readValue(reqParam, AmountInfo.class);
-            cardInfo = objectMapper.readValue(reqParam, CardInfo.class);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        AmountInfo amountInfo = objectMapper.readValue(reqParam, AmountInfo.class);
+        CardInfo cardInfo = objectMapper.readValue(reqParam, CardInfo.class);
 
         RequestDto requestDto = RequestDto.builder()
                 .cardInfo(cardInfo)
@@ -55,31 +44,19 @@ public class PaymentController {
                 .payType(Constants.PAY_APPROVE)
                 .build();
 
-        ResponseDto responseDto = paymentService.doPayment(requestDto);
+        ResponseDto responseDto = paymentService.processPayment(requestDto);
         logger.debug("###  responseDto = " + responseDto.toString());
 
-        String response = null;
-        try {
-            response = objectMapper.writeValueAsString(responseDto);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return response;
+        return objectMapper.writeValueAsString(responseDto);
     }
 
     // 결제취소 API
     @PostMapping("/reqCancel")
-    public String requestCancel(@RequestBody String reqParam) {
+    public String requestCancel(@RequestBody String reqParam) throws Exception {
 
-        String manageId = null;
-        AmountInfo amountInfo = null;
-        try {
-            amountInfo = objectMapper.readValue(reqParam, AmountInfo.class);
-            Map<String, Object> requestMap = objectMapper.readValue(reqParam, new TypeReference<Map<String, Object>>(){});
-            manageId = (String)requestMap.get("manageId");
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        Map<String, Object> requestMap = objectMapper.readValue(reqParam, new TypeReference<Map<String, Object>>(){});
+        String manageId = (String)requestMap.get("manageId");
+        AmountInfo amountInfo = objectMapper.readValue(reqParam, AmountInfo.class);
 
         RequestDto requestDto = RequestDto.builder()
                 .manageId(manageId)
@@ -87,36 +64,30 @@ public class PaymentController {
                 .payType(Constants.PAY_CANCEL)
                 .build();
 
-        ResponseDto responseDto = paymentService.doCancel(requestDto);
+        ResponseDto responseDto = paymentService.processCancel(requestDto);
         logger.debug("###  responseDto = " + responseDto.toString());
 
-        String response = null;
-        try {
-            response = objectMapper.writeValueAsString(responseDto);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return response;
+        return objectMapper.writeValueAsString(responseDto);
     }
 
     // 데이터 조회 API
     @PostMapping("/reqReadData")
-    public String requestData(@RequestBody String reqParam) {
-        return "hello first";
+    public String requestData(@RequestBody String reqParam) throws Exception {
+
+        ResponseDto responseDto =  paymentService.processReadPayment(reqParam);
+        logger.debug("###  responseDto = " + responseDto.toString());
+
+        return objectMapper.writeValueAsString(responseDto);
     }
 
     // 결제 목록 조회 API
     @PostMapping("/reqPaymentList")
-    public String requestPaymentList() {
-        List<PaymentInfo> paymentInfoList = paymentService.doPaymentList();
+    public String requestPaymentList() throws Exception {
 
-        String response = null;
-        try{
-            response = objectMapper.writeValueAsString(paymentInfoList);
-        }catch(Exception e){
-            e.printStackTrace();
-        }
-        return response;
+        List<PaymentInfo> paymentInfoList = paymentService.processReadPaymentList();
+        logger.debug("###  paymentInfoList = " + paymentInfoList.toString());
+
+        return objectMapper.writeValueAsString(paymentInfoList);
     }
 
 }

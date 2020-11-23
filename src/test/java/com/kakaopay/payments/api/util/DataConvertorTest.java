@@ -15,12 +15,13 @@ public class DataConvertorTest {
     }
 
     @Test
-    void encryptCardInfoTest(){
+    void encryptCardInfoTest() throws Exception{
 
-        CardInfo cardInfo = new CardInfo();
-        cardInfo.setCardNumber("1234567812345678");
-        cardInfo.setExpirationDate("1120");
-        cardInfo.setCvc("987");
+        CardInfo cardInfo = CardInfo.builder()
+                .cardNumber("1234567812345678")
+                .expirationDate("1120")
+                .cvc("987")
+                .build();
 
         String concatStr = DataConvertor.concatCardInfo(cardInfo);
 

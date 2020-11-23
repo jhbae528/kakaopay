@@ -9,33 +9,39 @@ import javax.crypto.spec.SecretKeySpec;
 
 public class AES256Cipher {
 
-    public static String encryptCardInfo(String str, String secretKey){
+    private static final String algorithm = "AES";
+    private static final String type = "AES/CBC/PKCS5Padding";
+    private static final String format = "UTF-8";
+
+    /**
+     * 데이터 AES 암호화
+     * @param str 암호화될 데이터
+     * @param secretKey secret key
+     * @return
+     */
+    public static String encryptCardInfo(String str, String secretKey) throws Exception{
 
         String iv = secretKey.substring(0, 16);
-        SecretKey secureKey = new SecretKeySpec(secretKey.getBytes(),"AES");
-        try{
-            Cipher c = Cipher.getInstance("AES/CBC/PKCS5Padding");
-            c.init(Cipher.ENCRYPT_MODE, secureKey, new IvParameterSpec(iv.getBytes()));
-            byte[] encrypted = c.doFinal(str.getBytes("UTF-8"));
-            return new String(Base64.encodeBase64(encrypted));
-        }catch(Exception e){
-            e.printStackTrace();
-        }
-        return null;
+        SecretKey secureKey = new SecretKeySpec(secretKey.getBytes(),algorithm);
+        Cipher c = Cipher.getInstance(type);
+        c.init(Cipher.ENCRYPT_MODE, secureKey, new IvParameterSpec(iv.getBytes()));
+        byte[] encrypted = c.doFinal(str.getBytes(format));
+        return new String(Base64.encodeBase64(encrypted));
     }
 
-    public static String decryptCardInfo(String str, String secretKey){
+    /**
+     * 데이터 AES 복호화
+     * @param str 복호화될 데이터
+     * @param secretKey secret key
+     * @return
+     */
+    public static String decryptCardInfo(String str, String secretKey) throws Exception{
 
         String iv = secretKey.substring(0, 16);
-        SecretKey secureKey = new SecretKeySpec(secretKey.getBytes(),"AES");
-        try{
-            Cipher c = Cipher.getInstance("AES/CBC/PKCS5Padding");
-            c.init(Cipher.DECRYPT_MODE, secureKey, new IvParameterSpec(iv.getBytes("UTF-8")));
-            byte[] decrypted = c.doFinal(Base64.decodeBase64(str.getBytes()));
-            return new String(decrypted, "UTF-8");
-        }catch(Exception e){
-            e.printStackTrace();
-        }
-        return null;
+        SecretKey secureKey = new SecretKeySpec(secretKey.getBytes(),algorithm);
+        Cipher c = Cipher.getInstance(type);
+        c.init(Cipher.DECRYPT_MODE, secureKey, new IvParameterSpec(iv.getBytes(format)));
+        byte[] decrypted = c.doFinal(Base64.decodeBase64(str.getBytes()));
+        return new String(decrypted, format);
     }
 }
