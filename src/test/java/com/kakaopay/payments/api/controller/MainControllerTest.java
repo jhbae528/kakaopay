@@ -49,7 +49,7 @@ class MainControllerTest {
     }
 
 
-    //@Test
+    @Test
     public void reqCancel() throws Exception {
 
         Map<String, Object> respMap = requestPayment(mapCase1Pay1);
@@ -65,9 +65,11 @@ class MainControllerTest {
         Assert.assertEquals(200, respCancelMap.get("status"));
         Assert.assertEquals("P0000000000000000002", respCancelMap.get("manageId"));
         Assert.assertNotNull(respCancelMap.get("payStatement"));
+
+        requestPaymentList();
     }
 
-    @Test
+    //@Test
     public void reqReadData() throws Exception {
 
         Map<String, Object> respMap = requestPayment(mapCase1Pay1);

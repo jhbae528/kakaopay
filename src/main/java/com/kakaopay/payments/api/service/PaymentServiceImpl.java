@@ -60,15 +60,16 @@ public class PaymentServiceImpl implements PaymentService{
         if(!validationVAT(amountInfo))    // 부가가치세 검증
             throw new Exception();
 
-        if(!validationCancelData(requestDto))
-            throw new Exception();
-
         Optional<PaymentInfo> opPaymentInfo = paymentInfoRepository.findById(requestDto.getManageId());
         if(opPaymentInfo.isPresent()){
             PaymentInfo paymentInfo = opPaymentInfo.get();
+
+            if(!validationCancelData(amountInfo, paymentInfo))
+                throw new Exception();
+
             requestDto.setCardInfo(extractCardInfo(paymentInfo.getPayStatement()));    // string 명세서에서 cardInfo 추출
 
-            paymentInfo = PaymentInfo.builder()
+            PaymentInfo cancelPaymentInfo = PaymentInfo.builder()
                     .payType(requestDto.getPayType())
                     .installment(requestDto.getAmountInfo().getInstallment())
                     .amount(requestDto.getAmountInfo().getAmount())
@@ -76,11 +77,15 @@ public class PaymentServiceImpl implements PaymentService{
                     .originManageId(requestDto.getManageId())
                     .build();
 
-            savePaymentInfo(requestDto, paymentInfo);   // 취소정보 저장
+            savePaymentInfo(requestDto, cancelPaymentInfo);   // 취소정보 저장
 
+            reduceOriginPaymentAmount(paymentInfo, cancelPaymentInfo);  // 원 결제 정보를 취소금액만큼 차감
+
+            paymentInfoRepository.save(paymentInfo);  // 결제 금액정보 다시 저장
+            
             ResponseDto responseDto = ResponseDto.builder()
-                    .manageId(paymentInfo.getManageId())
-                    .payStatement(paymentInfo.getPayStatement())
+                    .manageId(cancelPaymentInfo.getManageId())
+                    .payStatement(cancelPaymentInfo.getPayStatement())
                     .build();
             return responseDto;
         }else{
@@ -122,6 +127,12 @@ public class PaymentServiceImpl implements PaymentService{
         return paymentInfoRepository.findAll();
     }
 
+    /**
+     * 결제 및 취소 정보 저장
+     * @param requestDto
+     * @param paymentInfo
+     * @throws Exception
+     */
     private void savePaymentInfo(RequestDto requestDto, PaymentInfo paymentInfo) throws Exception{
 
         paymentInfoRepository.save(paymentInfo);  // 결제 or 취소 정보 저장
@@ -130,6 +141,18 @@ public class PaymentServiceImpl implements PaymentService{
         paymentInfoRepository.save(paymentInfo);   // string 명세 저장
 
         log.debug("###  updatedPaymentInfo = " + paymentInfo.toString());
+    }
+
+    /**
+     * 원 결제정보에서 취소금액 및 부가가시체만큼 차감
+     * @param paymentInfo
+     * @param fromPaymentInfo
+     */
+    private void reduceOriginPaymentAmount(PaymentInfo paymentInfo, PaymentInfo fromPaymentInfo){
+        int amount = paymentInfo.getAmount();
+        int vat = paymentInfo.getVat();
+        paymentInfo.setAmount(amount - fromPaymentInfo.getAmount());
+        paymentInfo.setVat(vat - fromPaymentInfo.getVat());
     }
 
     /**
@@ -148,11 +171,18 @@ public class PaymentServiceImpl implements PaymentService{
 
     /**
      * 취소 결제를 하기전 데이터 검증
-     * @param requestDto
+     * @param amountInfo
+     * @param paymentInfo
      * @return
      */
-    private boolean validationCancelData(RequestDto requestDto){
-        //List<PaymentInfo> paymentInfos = paymentInfoRepository.findByOriginManageId(paymentInfo.getManageId());
+    private boolean validationCancelData(AmountInfo amountInfo, PaymentInfo paymentInfo){
+
+        if(amountInfo.getAmount() > paymentInfo.getAmount())
+            return false;
+
+        if(amountInfo.getVat() > paymentInfo.getVat())
+            return false;
+
         return true;
     }
 
