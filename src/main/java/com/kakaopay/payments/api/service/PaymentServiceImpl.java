@@ -9,8 +9,7 @@ import com.kakaopay.payments.api.dto.ResponseDto;
 import com.kakaopay.payments.api.security.AES256Cipher;
 import com.kakaopay.payments.api.util.Constants;
 import com.kakaopay.payments.api.util.DataConvertor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -19,10 +18,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+
+@Slf4j
 @Service
 public class PaymentServiceImpl implements PaymentService{
-
-    private static final Logger logger = LoggerFactory.getLogger(PaymentServiceImpl.class);
 
     @Autowired
     PaymentInfoRepository paymentInfoRepository;
@@ -130,7 +129,7 @@ public class PaymentServiceImpl implements PaymentService{
         paymentInfo.setPayStatement(generatePayStatement(requestDto, secretKey));   // string 명세 생성
         paymentInfoRepository.save(paymentInfo);   // string 명세 저장
 
-        logger.debug("###  updatedPaymentInfo = " + paymentInfo.toString());
+        log.debug("###  updatedPaymentInfo = " + paymentInfo.toString());
     }
 
     /**
@@ -202,10 +201,10 @@ public class PaymentServiceImpl implements PaymentService{
         String encCardInfo = payStatement.substring(encOffset, Constants.PayStatementSize.ENC_CARD_INFO);   // 암호화된 정보 추출
         int indexBlank = encCardInfo.indexOf(' ');
         encCardInfo = encCardInfo.substring(0, indexBlank); // 암호화된 카드 string 값만 추출
-        logger.debug("encCardInfo = " + encCardInfo);
+        log.debug("encCardInfo = " + encCardInfo);
 
         String decData = AES256Cipher.decryptCardInfo(encCardInfo, secretKey);  // 복호화
-        logger.debug("decData = " + decData);
+        log.debug("decData = " + decData);
 
         return DataConvertor.objectCardInfo(decData);   // 카드정보 객체 변환
     }

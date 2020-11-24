@@ -8,21 +8,24 @@ import com.kakaopay.payments.api.dto.AmountInfo;
 import com.kakaopay.payments.api.dto.CardInfo;
 import com.kakaopay.payments.api.dto.RequestDto;
 import com.kakaopay.payments.api.dto.ResponseDto;
+import com.kakaopay.payments.api.exception.CustomException;
+import com.kakaopay.payments.api.exception.ErrorCode;
+import com.kakaopay.payments.api.exception.InvalidDataException;
 import com.kakaopay.payments.api.service.PaymentService;
 import com.kakaopay.payments.api.util.Constants;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 import java.util.Map;
 
 
+@Slf4j
 @RestController
 public class PaymentController {
-
-    private static final Logger logger = LoggerFactory.getLogger(PaymentController.class);
 
     @Autowired
     private ObjectMapper objectMapper;
@@ -38,6 +41,10 @@ public class PaymentController {
         AmountInfo amountInfo = objectMapper.readValue(reqParam, AmountInfo.class);
         CardInfo cardInfo = objectMapper.readValue(reqParam, CardInfo.class);
 
+        //if(cardInfo != null)
+            //throw new InvalidDataException();
+            //throw new Exception();
+
         RequestDto requestDto = RequestDto.builder()
                 .cardInfo(cardInfo)
                 .amountInfo(amountInfo)
@@ -45,7 +52,7 @@ public class PaymentController {
                 .build();
 
         ResponseDto responseDto = paymentService.processPayment(requestDto);
-        logger.debug("###  responseDto = " + responseDto.toString());
+        log.debug("###  responseDto = " + responseDto.toString());
 
         return objectMapper.writeValueAsString(responseDto);
     }
@@ -65,7 +72,7 @@ public class PaymentController {
                 .build();
 
         ResponseDto responseDto = paymentService.processCancel(requestDto);
-        logger.debug("###  responseDto = " + responseDto.toString());
+        log.debug("###  responseDto = " + responseDto.toString());
 
         return objectMapper.writeValueAsString(responseDto);
     }
@@ -74,8 +81,11 @@ public class PaymentController {
     @PostMapping("/reqReadData")
     public String requestData(@RequestBody String reqParam) throws Exception {
 
-        ResponseDto responseDto =  paymentService.processReadPayment(reqParam);
-        logger.debug("###  responseDto = " + responseDto.toString());
+        Map<String, Object> requestMap = objectMapper.readValue(reqParam, new TypeReference<Map<String, Object>>(){});
+        String manageId = (String)requestMap.get("manageId");
+
+        ResponseDto responseDto =  paymentService.processReadPayment(manageId);
+        log.debug("###  responseDto = " + responseDto.toString());
 
         return objectMapper.writeValueAsString(responseDto);
     }
@@ -85,7 +95,7 @@ public class PaymentController {
     public String requestPaymentList() throws Exception {
 
         List<PaymentInfo> paymentInfoList = paymentService.processReadPaymentList();
-        logger.debug("###  paymentInfoList = " + paymentInfoList.toString());
+        log.debug("###  paymentInfoList = " + paymentInfoList.toString());
 
         return objectMapper.writeValueAsString(paymentInfoList);
     }
