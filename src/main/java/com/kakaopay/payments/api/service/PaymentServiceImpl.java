@@ -6,6 +6,7 @@ import com.kakaopay.payments.api.dto.AmountInfo;
 import com.kakaopay.payments.api.dto.CardInfo;
 import com.kakaopay.payments.api.dto.RequestDto;
 import com.kakaopay.payments.api.dto.ResponseDto;
+import com.kakaopay.payments.api.exception.InvalidDataException;
 import com.kakaopay.payments.api.security.AES256Cipher;
 import com.kakaopay.payments.api.util.Constants;
 import com.kakaopay.payments.api.util.DataConvertor;
@@ -33,7 +34,7 @@ public class PaymentServiceImpl implements PaymentService{
     public ResponseDto processPayment(RequestDto requestDto) throws Exception{
 
         if(!validationVAT(requestDto.getAmountInfo()))    // 부가가치세 검증
-            throw new Exception();
+            throw new InvalidDataException();
 
         PaymentInfo paymentInfo = PaymentInfo.builder()
                 .payType(requestDto.getPayType())
@@ -57,69 +58,71 @@ public class PaymentServiceImpl implements PaymentService{
         AmountInfo amountInfo = requestDto.getAmountInfo();
         amountInfo.setInstallment(0);   // 취소거래시 할부 =: 0
 
-        if(!validationVAT(amountInfo))    // 부가가치세 검증
-            throw new Exception();
-
         Optional<PaymentInfo> opPaymentInfo = paymentInfoRepository.findById(requestDto.getManageId());
-        if(opPaymentInfo.isPresent()){
-            PaymentInfo paymentInfo = opPaymentInfo.get();
 
-            if(!validationCancelData(amountInfo, paymentInfo))
-                throw new Exception();
+        if(!opPaymentInfo.isPresent())      // manageId 존재하는지 검증
+            throw new InvalidDataException();
 
-            requestDto.setCardInfo(extractCardInfo(paymentInfo.getPayStatement()));    // string 명세서에서 cardInfo 추출
+        PaymentInfo paymentInfo = opPaymentInfo.get();
 
-            PaymentInfo cancelPaymentInfo = PaymentInfo.builder()
-                    .payType(requestDto.getPayType())
-                    .installment(requestDto.getAmountInfo().getInstallment())
-                    .amount(requestDto.getAmountInfo().getAmount())
-                    .vat(requestDto.getAmountInfo().getVat())
-                    .originManageId(requestDto.getManageId())
-                    .build();
+        if(!validationCancelVAT(paymentInfo, amountInfo))    // 부가가치세 검증
+            throw new InvalidDataException();
 
-            savePaymentInfo(requestDto, cancelPaymentInfo);   // 취소정보 저장
+        if(!validationCancelData(paymentInfo, amountInfo))  // 원 거래 금액 및 부가세와 취소 금액의 및 부가세와의 검증
+            throw new InvalidDataException();
 
-            reduceOriginPaymentAmount(paymentInfo, cancelPaymentInfo);  // 원 결제 정보를 취소금액만큼 차감
+        requestDto.setCardInfo(extractCardInfo(paymentInfo.getPayStatement()));    // string 명세서에서 cardInfo 추출
 
-            paymentInfoRepository.save(paymentInfo);  // 결제 금액정보 다시 저장
-            
-            ResponseDto responseDto = ResponseDto.builder()
-                    .manageId(cancelPaymentInfo.getManageId())
-                    .payStatement(cancelPaymentInfo.getPayStatement())
-                    .build();
-            return responseDto;
-        }else{
-            throw new Exception();  // TODO exception 해당하는 manageId가 존재하지 않음
-        }
+        PaymentInfo cancelPaymentInfo = PaymentInfo.builder()
+                .payType(requestDto.getPayType())
+                .installment(requestDto.getAmountInfo().getInstallment())
+                .amount(requestDto.getAmountInfo().getAmount())
+                .vat(requestDto.getAmountInfo().getVat())
+                .originManageId(requestDto.getManageId())
+                .build();
+
+        savePaymentInfo(requestDto, cancelPaymentInfo);   // 취소정보 저장
+
+        reduceOriginPaymentAmount(paymentInfo, cancelPaymentInfo);  // 원 결제 정보를 취소금액만큼 차감
+
+        paymentInfoRepository.save(paymentInfo);  // 결제 금액정보 다시 저장
+
+        ResponseDto responseDto = ResponseDto.builder()
+                .manageId(cancelPaymentInfo.getManageId())
+                .payStatement(cancelPaymentInfo.getPayStatement())
+                .build();
+        return responseDto;
     }
 
     @Override
     public ResponseDto processReadPayment(String manageId) throws Exception{
+
         Optional<PaymentInfo> opPaymentInfo = paymentInfoRepository.findById(manageId);
-        if(opPaymentInfo.isPresent()){
-            PaymentInfo paymentInfo = opPaymentInfo.get();
-            CardInfo cardInfo = extractCardInfo(paymentInfo.getPayStatement());
-            maskingCardInfo(cardInfo);
 
-            AmountInfo amountInfo = AmountInfo.builder()
-                    .amount(paymentInfo.getAmount())
-                    .vat(paymentInfo.getVat())
-                    .build();
+        if(!opPaymentInfo.isPresent())  // manageId 존재하는지 검증
+            throw new InvalidDataException();
 
-            Map<String, Object> optionalMap = new HashMap<String, Object>();
-            optionalMap.put("installment", amountInfo.getInstallment());
+        PaymentInfo paymentInfo = opPaymentInfo.get();
+        CardInfo cardInfo = extractCardInfo(paymentInfo.getPayStatement()); // 원거래로부터 카드정보 추출
+        
+        maskingCardInfo(cardInfo);  // 카드정보 마스킹
 
-            ResponseDto responseDto = ResponseDto.builder()
-                    .manageId(paymentInfo.getManageId())
-                    .cardInfo(cardInfo)
-                    .payType(paymentInfo.getPayType())
-                    .amountInfo(amountInfo)
-                    .optionalData(optionalMap)
-                    .build();
-            return responseDto;
-        }else{
-            throw new Exception();  // TODO exception 해당하는 manageId가 존재하지 않음
-        }
+        AmountInfo amountInfo = AmountInfo.builder()
+                .amount(paymentInfo.getAmount())
+                .vat(paymentInfo.getVat())
+                .build();
+
+        Map<String, Object> optionalMap = new HashMap<String, Object>();    // 응답값에 옵션 정보 추가 (할부)
+        optionalMap.put("installment", amountInfo.getInstallment());
+
+        ResponseDto responseDto = ResponseDto.builder()
+                .manageId(paymentInfo.getManageId())
+                .cardInfo(cardInfo)
+                .payType(paymentInfo.getPayType())
+                .amountInfo(amountInfo)
+                .optionalData(optionalMap)
+                .build();
+        return responseDto;
     }
 
     @Override
@@ -144,19 +147,19 @@ public class PaymentServiceImpl implements PaymentService{
     }
 
     /**
-     * 원 결제정보에서 취소금액 및 부가가시체만큼 차감
-     * @param paymentInfo
-     * @param fromPaymentInfo
+     * 원 결제정보에서 취소금액 및 부가가치세만큼 차감
+     * @param paymentInfo   원 결제정보
+     * @param cancelPaymentInfo   차감하고자 하는 금액 및 부가가치세 정보
      */
-    private void reduceOriginPaymentAmount(PaymentInfo paymentInfo, PaymentInfo fromPaymentInfo){
+    private void reduceOriginPaymentAmount(PaymentInfo paymentInfo, PaymentInfo cancelPaymentInfo){
         int amount = paymentInfo.getAmount();
         int vat = paymentInfo.getVat();
-        paymentInfo.setAmount(amount - fromPaymentInfo.getAmount());
-        paymentInfo.setVat(vat - fromPaymentInfo.getVat());
+        paymentInfo.setAmount(amount - cancelPaymentInfo.getAmount());
+        paymentInfo.setVat(vat - cancelPaymentInfo.getVat());
     }
 
     /**
-     * 부가가치세 계산
+     * 부가가치세 계산 및 검증
      * @param amountInfo 금액과 부가가치세 정보
      */
     private boolean validationVAT(AmountInfo amountInfo) {
@@ -170,17 +173,36 @@ public class PaymentServiceImpl implements PaymentService{
     }
 
     /**
-     * 취소 결제를 하기전 데이터 검증
-     * @param amountInfo
-     * @param paymentInfo
+     * 취소 시 VAT 계산 및 검증
+     * @param paymentInfo 원 결제 정보
+     * @param cancelAmountInfo    취소 금액정보
      * @return
      */
-    private boolean validationCancelData(AmountInfo amountInfo, PaymentInfo paymentInfo){
+    private boolean validationCancelVAT(PaymentInfo paymentInfo, AmountInfo cancelAmountInfo) {
 
-        if(amountInfo.getAmount() > paymentInfo.getAmount())
+        if(cancelAmountInfo.getVat() == null){
+            if(paymentInfo.getAmount() == cancelAmountInfo.getAmount())	// 원 결제금액과 취소금액이 같다면 원 결제의 남은 부가가치세를 사용
+                cancelAmountInfo.setVat(paymentInfo.getVat());
+			else
+                cancelAmountInfo.setVat(DataConvertor.calVAT(paymentInfo.getAmount()));
+        }
+        if(cancelAmountInfo.getVat() > cancelAmountInfo.getAmount())
+            return false;   // 부가가치세는 결제금액보다 클수 없습니다.
+        return true;
+    }
+
+    /**
+     * 취소 결제를 하기전 데이터 검증
+     * @param paymentInfo 원 결제 정보
+     * @param cancelAmountInfo 취소 결제 정보
+     * @return
+     */
+    private boolean validationCancelData(PaymentInfo paymentInfo, AmountInfo cancelAmountInfo){
+
+        if(paymentInfo.getAmount() < cancelAmountInfo.getAmount()) // 원거래 금액보다 취소 금액이 큰 값인지 검증
             return false;
 
-        if(amountInfo.getVat() > paymentInfo.getVat())
+        if(paymentInfo.getVat() < cancelAmountInfo.getVat() )   // 원거래 부가가치세보다 취소 부가가치세가 큰 값인지 검증
             return false;
 
         return true;
