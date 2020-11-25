@@ -33,6 +33,7 @@ public class PaymentServiceImpl implements PaymentService{
     @Override
     public ResponseDto processPayment(RequestDto requestDto) throws Exception{
 
+        log.debug("####### processPayment start = " + requestDto);
         if(!validationVAT(requestDto.getAmountInfo()))    // 부가가치세 검증
             throw new InvalidDataException();
 
@@ -43,13 +44,16 @@ public class PaymentServiceImpl implements PaymentService{
                 .vat(requestDto.getAmountInfo().getVat())
                 .build();
 
-        savePaymentInfo(requestDto, paymentInfo);   // 결제정보 저장
+        synchronized (requestDto.getCardInfo().getCardNumber().intern()) {
+            savePaymentInfo(requestDto, paymentInfo);   // 결제정보 저장
+        }
 
-        ResponseDto responseDto = ResponseDto.builder()
+        log.debug("####### processPayment end = " + requestDto);
+
+        return ResponseDto.builder()
                 .manageId(paymentInfo.getManageId())
                 .payStatement(paymentInfo.getPayStatement())
                 .build();
-        return responseDto;
     }
 
     @Override
@@ -65,33 +69,38 @@ public class PaymentServiceImpl implements PaymentService{
 
         PaymentInfo paymentInfo = opPaymentInfo.get();
 
-        if(!validationCancelVAT(paymentInfo, amountInfo))    // 부가가치세 검증
-            throw new InvalidDataException();
-
-        if(!validationCancelData(paymentInfo, amountInfo))  // 원 거래 금액 및 부가세와 취소 금액의 및 부가세와의 검증
-            throw new InvalidDataException();
-
         requestDto.setCardInfo(extractCardInfo(paymentInfo.getPayStatement()));    // string 명세서에서 cardInfo 추출
 
-        PaymentInfo cancelPaymentInfo = PaymentInfo.builder()
-                .payType(requestDto.getPayType())
-                .installment(requestDto.getAmountInfo().getInstallment())
-                .amount(requestDto.getAmountInfo().getAmount())
-                .vat(requestDto.getAmountInfo().getVat())
-                .originManageId(requestDto.getManageId())
-                .build();
+        PaymentInfo cancelPaymentInfo = null;
 
-        savePaymentInfo(requestDto, cancelPaymentInfo);   // 취소정보 저장
+        synchronized (requestDto.getManageId().intern()){
+            log.debug("### start = synchronized (requestDto.getManageId().intern()){ ");
+            if(!validationCancelVAT(paymentInfo, amountInfo))    // 부가가치세 검증
+                throw new InvalidDataException();
 
-        reduceOriginPaymentAmount(paymentInfo, cancelPaymentInfo);  // 원 결제 정보를 취소금액만큼 차감
+            if(!validationCancelData(paymentInfo, amountInfo))  // 원 거래 금액 및 부가세와 취소 금액의 및 부가세와의 검증
+                throw new InvalidDataException();
 
-        paymentInfoRepository.save(paymentInfo);  // 결제 금액정보 다시 저장
+            cancelPaymentInfo = PaymentInfo.builder()
+                    .payType(requestDto.getPayType())
+                    .installment(requestDto.getAmountInfo().getInstallment())
+                    .amount(requestDto.getAmountInfo().getAmount())
+                    .vat(requestDto.getAmountInfo().getVat())
+                    .originManageId(requestDto.getManageId())
+                    .build();
 
-        ResponseDto responseDto = ResponseDto.builder()
+            savePaymentInfo(requestDto, cancelPaymentInfo);   // 취소정보 저장
+
+            reduceOriginPaymentAmount(paymentInfo, cancelPaymentInfo);  // 원 결제 정보를 취소금액만큼 차감
+
+            paymentInfoRepository.save(paymentInfo);  // 결제 금액정보 다시 저장
+            log.debug("### end = synchronized (requestDto.getManageId().intern()){ ");
+        }
+
+        return ResponseDto.builder()
                 .manageId(cancelPaymentInfo.getManageId())
                 .payStatement(cancelPaymentInfo.getPayStatement())
                 .build();
-        return responseDto;
     }
 
     @Override
@@ -137,13 +146,12 @@ public class PaymentServiceImpl implements PaymentService{
      * @throws Exception
      */
     private void savePaymentInfo(RequestDto requestDto, PaymentInfo paymentInfo) throws Exception{
-
-        paymentInfoRepository.save(paymentInfo);  // 결제 or 취소 정보 저장
+        synchronized (this){
+            paymentInfoRepository.save(paymentInfo);  // 결제 or 취소 정보 저장
+        }
         requestDto.setManageId(paymentInfo.getManageId());
         paymentInfo.setPayStatement(generatePayStatement(requestDto, secretKey));   // string 명세 생성
         paymentInfoRepository.save(paymentInfo);   // string 명세 저장
-
-        log.debug("###  updatedPaymentInfo = " + paymentInfo.toString());
     }
 
     /**
