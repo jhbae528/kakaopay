@@ -184,7 +184,7 @@ public class PaymentServiceImpl implements PaymentService{
             if(paymentInfo.getAmount() == cancelAmountInfo.getAmount())	// 원 결제금액과 취소금액이 같다면 원 결제의 남은 부가가치세를 사용
                 cancelAmountInfo.setVat(paymentInfo.getVat());
 			else
-                cancelAmountInfo.setVat(DataConvertor.calVAT(paymentInfo.getAmount()));
+                cancelAmountInfo.setVat(DataConvertor.calVAT(cancelAmountInfo.getAmount()));
         }
         if(cancelAmountInfo.getVat() > cancelAmountInfo.getAmount())
             return false;   // 부가가치세는 결제금액보다 클수 없습니다.
@@ -204,6 +204,10 @@ public class PaymentServiceImpl implements PaymentService{
 
         if(paymentInfo.getVat() < cancelAmountInfo.getVat() )   // 원거래 부가가치세보다 취소 부가가치세가 큰 값인지 검증
             return false;
+
+        if((paymentInfo.getAmount() == cancelAmountInfo.getAmount())    // 원거래 금액이 0원이 될 때 부가가치세는 차감된 후는 0이어야 함.
+            && (paymentInfo.getVat() != cancelAmountInfo.getVat()))
+                return false;
 
         return true;
     }

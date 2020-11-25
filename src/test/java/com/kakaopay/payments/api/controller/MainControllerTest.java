@@ -125,16 +125,19 @@ class MainControllerTest {
         requestPaymentList();
     }
 
-    @Test
+    //@Test
     public void case1Test() throws Exception {
-        // 결제 [결제금액 : 11,000 / 부가가치세 : 1,000]
+
+        logger.debug("@@@@@  CASE1 => 결제 [결제금액 : 11,000 / 부가가치세 : 1,000]");
         Map<String, Object> respMap = requestPayment(mapCase1Pay1);
 
         Assert.assertEquals(200, respMap.get("status"));
         Assert.assertEquals("P0000000000000000001", respMap.get("manageId"));
         Assert.assertNotNull(respMap.get("payStatement"));
+        requestReadData(respMap);
 
-        // 부분취소 [취소금액 : 1,100 / 부가가치세 : 100]
+
+        logger.debug("@@@@@  CASE1-1 => 부분취소 [취소금액 : 1,100 / 부가가치세 : 100]");
         Map<String, Object> reqCancelMap = new HashMap<String, Object>(mapCase1Cancel1);
         reqCancelMap.put("manageId", respMap.get("manageId"));
         Map<String, Object> respCancelMap = requestCancel(reqCancelMap);
@@ -142,8 +145,9 @@ class MainControllerTest {
         Assert.assertEquals(200, respCancelMap.get("status"));
         Assert.assertEquals("P0000000000000000002", respCancelMap.get("manageId"));
         Assert.assertNotNull(respCancelMap.get("payStatement"));
+        requestReadData(respMap);
 
-        // 부분취소 [취소금액 : 3,300 / 부가가치세 : null]
+        logger.debug("@@@@@  CASE1-2 => 부분취소 [취소금액 : 3,300 / 부가가치세 : null]");
         Map<String, Object> reqCancelMap2 = new HashMap<String, Object>(mapCase1Cancel2);
         reqCancelMap2.put("manageId", respMap.get("manageId"));
         Map<String, Object> respCancelMap2 = requestCancel(reqCancelMap2);
@@ -151,36 +155,134 @@ class MainControllerTest {
         Assert.assertEquals(200, respCancelMap2.get("status"));
         Assert.assertEquals("P0000000000000000003", respCancelMap2.get("manageId"));
         Assert.assertNotNull(respCancelMap2.get("payStatement"));
+        requestReadData(respMap);
 
-        // 부분취소 [취소금액 : 7,000 / 부가가치세 : null]
+
+        logger.debug("@@@@@  CASE1-3 => 부분취소 [취소금액 : 7,000 / 부가가치세 : null]");
         Map<String, Object> reqCancelMap3 = new HashMap<String, Object>(mapCase1Cancel3);
         reqCancelMap3.put("manageId", respMap.get("manageId"));
         Map<String, Object> respCancelMap3 = requestCancel(reqCancelMap3);
 
-        Assert.assertEquals(500, respCancelMap3.get("status"));
+        Assert.assertEquals(400, respCancelMap3.get("status"));
+        requestReadData(respMap);
 
-        // 부분취소 [취소금액 : 6,600 / 부가가치세 : 700]
+
+        logger.debug("@@@@@  CASE1-4 => 부분취소 [취소금액 : 6,600 / 부가가치세 : 700]");
         Map<String, Object> reqCancelMap4 = new HashMap<String, Object>(mapCase1Cancel4);
         reqCancelMap4.put("manageId", respMap.get("manageId"));
         Map<String, Object> respCancelMap4 = requestCancel(reqCancelMap4);
 
-        Assert.assertEquals(500, respCancelMap4.get("status"));
+        Assert.assertEquals(400, respCancelMap4.get("status"));
+        requestReadData(respMap);
 
-        // 부분취소 [취소금액 : 6,600 / 부가가치세 : 600]
+
+        logger.debug("@@@@@  CASE1-5 => 부분취소 [취소금액 : 6,600 / 부가가치세 : 600]");
         Map<String, Object> reqCancelMap5 = new HashMap<String, Object>(mapCase1Cancel5);
-        reqCancelMap5.put("manageId", reqCancelMap2.get("manageId"));
+        reqCancelMap5.put("manageId", respMap.get("manageId"));
         Map<String, Object> respCancelMap5 = requestCancel(reqCancelMap5);
 
         Assert.assertEquals(200, respCancelMap5.get("status"));
         Assert.assertEquals("P0000000000000000004", respCancelMap5.get("manageId"));
         Assert.assertNotNull(respCancelMap5.get("payStatement"));
+        requestReadData(respMap);
 
-        // 부분취소 [취소금액 : 100 / 부가가치세 : null]
+
+        logger.debug("@@@@@  CASE1-6 => 부분취소 [취소금액 : 100 / 부가가치세 : null]");
         Map<String, Object> reqCancelMap6 = new HashMap<String, Object>(mapCase1Cancel6);
         reqCancelMap6.put("manageId", respMap.get("manageId"));
         Map<String, Object> respCancelMap6 = requestCancel(reqCancelMap6);
 
-        Assert.assertEquals(500, respCancelMap4.get("status"));
+        Assert.assertEquals(400, respCancelMap4.get("status"));
+        requestReadData(respMap);
+
+
+        requestPaymentList();
+    }
+
+    //@Test
+    public void case2Test() throws Exception {
+
+        logger.debug("@@@@@  CASE2 => 결제 [결제금액 : 20,000 / 부가가치세 : 909]");
+        Map<String, Object> respMap = requestPayment(mapCase2Pay1);
+
+        Assert.assertEquals(200, respMap.get("status"));
+        Assert.assertEquals("P0000000000000000001", respMap.get("manageId"));
+        Assert.assertNotNull(respMap.get("payStatement"));
+        requestReadData(respMap);
+
+
+        logger.debug("@@@@@  CASE2-1 => 부분취소 [취소금액 : 10,000 / 부가가치세 : 0]");
+        Map<String, Object> reqCancelMap = new HashMap<String, Object>(mapCase2Cancel1);
+        reqCancelMap.put("manageId", respMap.get("manageId"));
+        Map<String, Object> respCancelMap = requestCancel(reqCancelMap);
+
+        Assert.assertEquals(200, respCancelMap.get("status"));
+        Assert.assertEquals("P0000000000000000002", respCancelMap.get("manageId"));
+        Assert.assertNotNull(respCancelMap.get("payStatement"));
+        requestReadData(respMap);
+
+        logger.debug("@@@@@  CASE2-2 => 부분취소 [취소금액 : 10,000 / 부가가치세 : 0]");
+        Map<String, Object> reqCancelMap2 = new HashMap<String, Object>(mapCase2Cancel2);
+        reqCancelMap2.put("manageId", respMap.get("manageId"));
+        Map<String, Object> respCancelMap2 = requestCancel(reqCancelMap2);
+
+        Assert.assertEquals(400, respCancelMap2.get("status"));
+        requestReadData(respMap);
+
+
+        logger.debug("@@@@@  CASE2-3 => 부분취소 [취소금액 : 10,000 / 부가가치세 : 909]");
+        Map<String, Object> reqCancelMap3 = new HashMap<String, Object>(mapCase2Cancel3);
+        reqCancelMap3.put("manageId", respMap.get("manageId"));
+        Map<String, Object> respCancelMap3 = requestCancel(reqCancelMap3);
+
+        Assert.assertEquals(200, respCancelMap.get("status"));
+        Assert.assertEquals("P0000000000000000003", respCancelMap3.get("manageId"));
+        Assert.assertNotNull(respCancelMap.get("payStatement"));
+        requestReadData(respMap);
+
+        requestPaymentList();
+    }
+
+    @Test
+    public void case3Test() throws Exception {
+
+        logger.debug("@@@@@  CASE3 => 결제 [결제금액 : 20,000 / 부가가치세 : null]");
+        Map<String, Object> respMap = requestPayment(mapCase3Pay1);
+
+        Assert.assertEquals(200, respMap.get("status"));
+        Assert.assertEquals("P0000000000000000001", respMap.get("manageId"));
+        Assert.assertNotNull(respMap.get("payStatement"));
+        requestReadData(respMap);
+
+
+        logger.debug("@@@@@  CASE3-1 => 부분취소 [취소금액 : 10,000 / 부가가치세 : 1,000]");
+        Map<String, Object> reqCancelMap = new HashMap<String, Object>(mapCase3Cancel1);
+        reqCancelMap.put("manageId", respMap.get("manageId"));
+        Map<String, Object> respCancelMap = requestCancel(reqCancelMap);
+
+        Assert.assertEquals(200, respCancelMap.get("status"));
+        Assert.assertEquals("P0000000000000000002", respCancelMap.get("manageId"));
+        Assert.assertNotNull(respCancelMap.get("payStatement"));
+        requestReadData(respMap);
+
+        logger.debug("@@@@@  CASE3-2 => 부분취소 [취소금액 : 10,000 / 부가가치세 : 909]");
+        Map<String, Object> reqCancelMap2 = new HashMap<String, Object>(mapCase3Cancel2);
+        reqCancelMap2.put("manageId", respMap.get("manageId"));
+        Map<String, Object> respCancelMap2 = requestCancel(reqCancelMap2);
+
+        Assert.assertEquals(400, respCancelMap2.get("status"));
+        requestReadData(respMap);
+
+
+        logger.debug("@@@@@  CASE3-3 => 부분취소 [취소금액 : 10,000 / 부가가치세 : null]");
+        Map<String, Object> reqCancelMap3 = new HashMap<String, Object>(mapCase3Cancel3);
+        reqCancelMap3.put("manageId", respMap.get("manageId"));
+        Map<String, Object> respCancelMap3 = requestCancel(reqCancelMap3);
+
+        Assert.assertEquals(200, respCancelMap.get("status"));
+        Assert.assertEquals("P0000000000000000003", respCancelMap3.get("manageId"));
+        Assert.assertNotNull(respCancelMap.get("payStatement"));
+        requestReadData(respMap);
 
         requestPaymentList();
     }
