@@ -16,6 +16,7 @@
 
 * 데이터베이스 
 	H2 embedded mem
+		DDL Auto Create
 
 * 테이블 설계: 
     create table payment_info (
