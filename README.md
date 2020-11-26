@@ -32,27 +32,27 @@ subject - 배재호
 
 # 문제해결 전략
 * 통신 데이터 
-    RequestDto, ResponseDto 를 정의하여 json 매핑으로 사용
+    - RequestDto, ResponseDto 를 정의하여 json 매핑으로 사용
 
 * 관리번호
-    P0000000...00 || sequence 번호로 생성 [20자리] 
+    - P0000000...00 || sequence 번호로 생성 [20자리] 
     
 * 암호화 
-    AES/CBC/PKCS5Padding
+    - AES/CBC/PKCS5Padding
 
 * Multi Thread
-    결제 요청시 : 결제 카드번호를 기준으로 syncronized block 설정
+    - 결제 요청시 : 결제 카드번호를 기준으로 syncronized block 설정
     
-    결제 취소시 : 원거래 관리번호를 기준으로 syncronized block 설정
+    - 결제 취소시 : 원거래 관리번호를 기준으로 syncronized block 설정
     
 * Exception
-    CustomException 및 에러코드 정의
+    - CustomException 및 에러코드 정의
     
 * 금액 데이터
-    금액을 토대로 부가가치세를 자동 계산 후 거래 진행
+    - 금액을 토대로 부가가치세를 자동 계산 후 거래 진행
     
 * 단위테스트
-    MockMvc 사용
+    - MockMvc 사용
 
 
 # 빌드 및 실행 방법
@@ -75,42 +75,42 @@ subject - 배재호
 
 * 실행방법
 
-    결제 API : PaymentController.requestPayment() -> paymentService.processPayment()
+    - 결제 API : PaymentController.requestPayment() -> paymentService.processPayment()
     
-    결제 취소 API : PaymentController.requestCancel() -> paymentService.processCancel()
+    - 결제 취소 API : PaymentController.requestCancel() -> paymentService.processCancel()
     
-    데이터 조회 API : PaymentController.requestPayment()-> paymentService.processReadPayment()
+    - 데이터 조회 API : PaymentController.requestPayment()-> paymentService.processReadPayment()
 
 
 # 단위 테스트
 * Test Class
-    MainControllerTest.java
+    - MainControllerTest.java
     
 * 필수 구현 API 기능
     1. 결제 API
-        reqPay() 테스트 실행
+        - reqPay() 테스트 실행
     
     2. 결제 취소 API
-        reqCancel() 테스트 실행
+        - reqCancel() 테스트 실행
 
     3. 데이터 조회 API
-        reqReadData() 테스트 실행
+        - reqReadData() 테스트 실행
         
 * 선택문제
     Test Case 1
-        case1Test() 테스트 실행
+        - case1Test() 테스트 실행
         
     Test Case 2
-        case2Test() 테스트 실행
+        - case2Test() 테스트 실행
         
     Test Case 3
-        case3Test() 테스트 실행
+        - case3Test() 테스트 실행
         
     Multi Thread - 결제 - 하나의 카드번호로 동시에 결제를 할 수 없음
-        multiThreadCasePaymentTest() 테스트 실행
+        - multiThreadCasePaymentTest() 테스트 실행
         
     Multi Thread - 전체취소 - 결제 한 건에 대한 전체취소를 동시에 할 수 없음
-        multiThreadCaseTotalCancelTest() 테스트 실행
+        - multiThreadCaseTotalCancelTest() 테스트 실행
         
     Multi Thread - 부분취소 - 결제 한 건에 대한 부분취소를 동시에 할 수 없음
-        multiThreadCasePartCancelTest() 테스트 실행
+        - multiThreadCasePartCancelTest() 테스트 실행
