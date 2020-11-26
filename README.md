@@ -33,6 +33,9 @@ subject - 배재호
 # 문제해결 전략
 * 통신 데이터 
     RequestDto, ResponseDto 를 정의하여 json 매핑으로 사용
+
+* 관리번호
+    P0000000...00 || sequence 번호로 생성 [20자리] 
     
 * 암호화 
     AES/CBC/PKCS5Padding
