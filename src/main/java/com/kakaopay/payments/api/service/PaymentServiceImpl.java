@@ -6,6 +6,7 @@ import com.kakaopay.payments.api.dto.AmountInfo;
 import com.kakaopay.payments.api.dto.CardInfo;
 import com.kakaopay.payments.api.dto.RequestDto;
 import com.kakaopay.payments.api.dto.ResponseDto;
+import com.kakaopay.payments.api.exception.ErrorCode;
 import com.kakaopay.payments.api.exception.InvalidDataException;
 import com.kakaopay.payments.api.security.AES256Cipher;
 import com.kakaopay.payments.api.util.Constants;
@@ -27,15 +28,14 @@ public class PaymentServiceImpl implements PaymentService{
     @Autowired
     PaymentInfoRepository paymentInfoRepository;
 
-    private String secretKey = "12345678901234567890123456789012";  // TODO : DataBase 조회 후 derivation
+    private static String secretKey = "12345678901234567890123456789012";  // TODO : DataBase 조회 후 derivation
 
 
     @Override
     public ResponseDto processPayment(RequestDto requestDto) throws Exception{
 
-        log.debug("####### processPayment start = " + requestDto);
         if(!validationVAT(requestDto.getAmountInfo()))    // 부가가치세 검증
-            throw new InvalidDataException();
+            throw new InvalidDataException(ErrorCode.INVALID_VAT_VALUE);
 
         PaymentInfo paymentInfo = PaymentInfo.builder()
                 .payType(requestDto.getPayType())
@@ -44,11 +44,10 @@ public class PaymentServiceImpl implements PaymentService{
                 .vat(requestDto.getAmountInfo().getVat())
                 .build();
 
-        synchronized (requestDto.getCardInfo().getCardNumber().intern()) {
+        synchronized (requestDto.getCardInfo().getCardNumber().intern())    // 동시성 - 같은 카드번호 기준
+        {
             savePaymentInfo(requestDto, paymentInfo);   // 결제정보 저장
         }
-
-        log.debug("####### processPayment end = " + requestDto);
 
         return ResponseDto.builder()
                 .manageId(paymentInfo.getManageId())
@@ -65,7 +64,7 @@ public class PaymentServiceImpl implements PaymentService{
         Optional<PaymentInfo> opPaymentInfo = paymentInfoRepository.findById(requestDto.getManageId());
 
         if(!opPaymentInfo.isPresent())      // manageId 존재하는지 검증
-            throw new InvalidDataException();
+            throw new InvalidDataException(ErrorCode.NOT_FOUND_ORIGIN_MANAGE_ID);
 
         PaymentInfo paymentInfo = opPaymentInfo.get();
 
@@ -73,13 +72,13 @@ public class PaymentServiceImpl implements PaymentService{
 
         PaymentInfo cancelPaymentInfo = null;
 
-        synchronized (requestDto.getManageId().intern()){
-            log.debug("### start = synchronized (requestDto.getManageId().intern()){ ");
+        synchronized (requestDto.getManageId().intern())    // 동시성 - 결제 한 건이 기준
+        {
             if(!validationCancelVAT(paymentInfo, amountInfo))    // 부가가치세 검증
-                throw new InvalidDataException();
+                throw new InvalidDataException(ErrorCode.INVALID_VAT_VALUE);
 
             if(!validationCancelData(paymentInfo, amountInfo))  // 원 거래 금액 및 부가세와 취소 금액의 및 부가세와의 검증
-                throw new InvalidDataException();
+                throw new InvalidDataException(ErrorCode.INVALID_CANCEL_AMOUNT_DATA);
 
             cancelPaymentInfo = PaymentInfo.builder()
                     .payType(requestDto.getPayType())
@@ -94,7 +93,6 @@ public class PaymentServiceImpl implements PaymentService{
             reduceOriginPaymentAmount(paymentInfo, cancelPaymentInfo);  // 원 결제 정보를 취소금액만큼 차감
 
             paymentInfoRepository.save(paymentInfo);  // 결제 금액정보 다시 저장
-            log.debug("### end = synchronized (requestDto.getManageId().intern()){ ");
         }
 
         return ResponseDto.builder()
@@ -109,7 +107,7 @@ public class PaymentServiceImpl implements PaymentService{
         Optional<PaymentInfo> opPaymentInfo = paymentInfoRepository.findById(manageId);
 
         if(!opPaymentInfo.isPresent())  // manageId 존재하는지 검증
-            throw new InvalidDataException();
+            throw new InvalidDataException(ErrorCode.NOT_FOUND_ORIGIN_MANAGE_ID);
 
         PaymentInfo paymentInfo = opPaymentInfo.get();
         CardInfo cardInfo = extractCardInfo(paymentInfo.getPayStatement()); // 원거래로부터 카드정보 추출
@@ -124,14 +122,13 @@ public class PaymentServiceImpl implements PaymentService{
         Map<String, Object> optionalMap = new HashMap<String, Object>();    // 응답값에 옵션 정보 추가 (할부)
         optionalMap.put("installment", amountInfo.getInstallment());
 
-        ResponseDto responseDto = ResponseDto.builder()
+        return ResponseDto.builder()
                 .manageId(paymentInfo.getManageId())
                 .cardInfo(cardInfo)
                 .payType(paymentInfo.getPayType())
                 .amountInfo(amountInfo)
                 .optionalData(optionalMap)
                 .build();
-        return responseDto;
     }
 
     @Override
@@ -229,6 +226,7 @@ public class PaymentServiceImpl implements PaymentService{
     public String generatePayStatement(RequestDto requestDto, String secretKey) throws Exception{
 
         String concatCardInfo = DataConvertor.concatCardInfo(requestDto.getCardInfo());   // 카드정보 문자열 합치기
+
         String encData = AES256Cipher.encryptCardInfo(concatCardInfo, secretKey);       // 카드정보 암호화
 
         // 공통헤더부문

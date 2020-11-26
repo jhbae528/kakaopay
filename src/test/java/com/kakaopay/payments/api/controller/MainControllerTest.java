@@ -44,7 +44,7 @@ class MainControllerTest {
      * 1. 결제 API
      * @throws Exception
      */
-    //@Test
+    @Test
     public void reqPay() throws Exception {
 
         Map<String, Object> respMap = requestPayment(mapCase1Pay1);
@@ -60,7 +60,7 @@ class MainControllerTest {
      * 2. 결제 취소 API
      * @throws Exception
      */
-    //@Test
+    @Test
     public void reqCancel() throws Exception {
 
         Map<String, Object> respMap = requestPayment(mapCase1Pay1);
@@ -85,7 +85,7 @@ class MainControllerTest {
      * 3. 데이터 조회 API
      * @throws Exception
      */
-    //@Test
+    @Test
     public void reqReadData() throws Exception {
 
         Map<String, Object> respMap = requestPayment(mapCase1Pay1);
@@ -193,6 +193,44 @@ class MainControllerTest {
      * 4.선택문제
      * Multi Thread
      * - 전체취소 - 결제 한 건에 대한 전체취소를 동시에 할 수 없습니다.
+     * @throws Exception
+     */
+    @Test
+    public void multiThreadCaseCancelAllTest() throws Exception{
+
+        ExecutorService exeService = Executors.newFixedThreadPool(10);
+
+        logger.debug("@@@@@  CASE1 => 결제 [결제금액 : 11,000 / 부가가치세 : 1,000] - 성공");
+        String manageId = casePayment(mapCase1Pay1);
+
+        Runnable runnable = new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    case1CancelAll(manageId, false);
+                } catch (Exception e) {}
+            }
+        };
+        Runnable runnable2 = new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    case1CancelAll(manageId, false);
+                } catch (Exception e) {}
+            }
+        };
+        exeService.execute(runnable);
+        exeService.execute(runnable2);
+        try{
+            Thread.sleep(3000);
+        }catch(InterruptedException e){}
+
+        exeService.shutdown();
+    }
+    
+    /**
+     * 4.선택문제
+     * Multi Thread
      * - 부분취소 - 결제 한 건에 대한 부분취소를 동시에 할 수 없습니다.
      * @throws Exception
      */
@@ -265,6 +303,8 @@ class MainControllerTest {
         exeService.shutdown();
     }
 
+
+
     private void case1Cancel1(String manageId, boolean assertion) throws Exception{
         logger.debug("@@@@@  CASE1-1 => 부분취소 [취소금액 : 1,100 / 부가가치세 : 100] - 성공");
         Map<String, Object> respCancelMap = caseCancel(mapCase1Cancel1, manageId);
@@ -310,6 +350,13 @@ class MainControllerTest {
             Assert.assertEquals(400, respCancelMap6.get("status"));
         }
     }
+    private void case1CancelAll(String manageId, boolean assertion) throws Exception{
+        logger.debug("@@@@@  CASE1-All => 전체취소 [취소금액 : 11,000 / 부가가치세 : 1,000] - 성공");
+        Map<String, Object> respCancelMap6 = caseCancel(mapCase1CancelALL, manageId);
+        if(assertion){
+            Assert.assertEquals(400, respCancelMap6.get("status"));
+        }
+    }
 
     private void case1() throws Exception {
         logger.debug("@@@@@  CASE1 => 결제 [결제금액 : 11,000 / 부가가치세 : 1,000] - 성공");
@@ -347,7 +394,6 @@ class MainControllerTest {
     }
 
     private void case2() throws Exception {
-
         logger.debug("@@@@@  CASE2 => 결제 [결제금액 : 20,000 / 부가가치세 : 909] - 성공");
         String manageId = casePayment(mapCase2Pay1);
         case2Cancel1(manageId, true);
@@ -380,7 +426,6 @@ class MainControllerTest {
     }
 
     private void case3() throws Exception {
-
         logger.debug("@@@@@  CASE3 => 결제 [결제금액 : 20,000 / 부가가치세 : null] - 성공");
         String manageId = casePayment(mapCase3Pay1);
         case3Cancel1(manageId, true);
@@ -533,6 +578,10 @@ class MainControllerTest {
     Map<String, Object> mapCase1Cancel6 = Map.of(
             "amount", 100
     );
+    Map<String, Object> mapCase1CancelALL = Map.of(
+            "amount", 11000,
+            "vat", 1000
+    );
 
     Map<String, Object> mapCase2Pay1 = Map.of(
             "cardNumber", "371002300491824",
@@ -573,8 +622,4 @@ class MainControllerTest {
     Map<String, Object> mapCase3Cancel3 = Map.of(
             "amount", 10000
     );
-
-    class threadCase1 extends Thread{
-
-    }
 }

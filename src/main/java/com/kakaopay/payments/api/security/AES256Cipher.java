@@ -22,7 +22,7 @@ public class AES256Cipher {
     public static String encryptCardInfo(String str, String secretKey) throws Exception{
 
         String iv = secretKey.substring(0, 16);
-        SecretKey secureKey = new SecretKeySpec(secretKey.getBytes(),algorithm);
+        SecretKey secureKey = new SecretKeySpec(secretKey.getBytes(), algorithm);
         Cipher c = Cipher.getInstance(type);
         c.init(Cipher.ENCRYPT_MODE, secureKey, new IvParameterSpec(iv.getBytes()));
         byte[] encrypted = c.doFinal(str.getBytes(format));
@@ -38,7 +38,7 @@ public class AES256Cipher {
     public static String decryptCardInfo(String str, String secretKey) throws Exception{
 
         String iv = secretKey.substring(0, 16);
-        SecretKey secureKey = new SecretKeySpec(secretKey.getBytes(),algorithm);
+        SecretKey secureKey = new SecretKeySpec(secretKey.getBytes(), algorithm);
         Cipher c = Cipher.getInstance(type);
         c.init(Cipher.DECRYPT_MODE, secureKey, new IvParameterSpec(iv.getBytes(format)));
         byte[] decrypted = c.doFinal(Base64.decodeBase64(str.getBytes()));

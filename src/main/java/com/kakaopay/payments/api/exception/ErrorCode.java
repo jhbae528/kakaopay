@@ -5,8 +5,11 @@ import org.springframework.http.HttpStatus;
 
 @Getter
 public enum ErrorCode {
-    INVALID_INPUT_VALUE(HttpStatus.BAD_REQUEST.value(), "C001", "Invalid Input Value"),
 
+    OMISSION_REQUIRED_PARAM(HttpStatus.BAD_REQUEST.value(), "C001", "Omission Required Parameter."),
+    NOT_FOUND_ORIGIN_MANAGE_ID(HttpStatus.BAD_REQUEST.value(), "C002", "Not Found Origin ManageId."),
+    INVALID_VAT_VALUE(HttpStatus.BAD_REQUEST.value(), "C003", "Invalid VAT Value."),
+    INVALID_CANCEL_AMOUNT_DATA(HttpStatus.BAD_REQUEST.value(), "C004", "Invalid Cancel Amount Data."),
     ;
 
     private final int status;

@@ -8,11 +8,11 @@ import com.kakaopay.payments.api.dto.AmountInfo;
 import com.kakaopay.payments.api.dto.CardInfo;
 import com.kakaopay.payments.api.dto.RequestDto;
 import com.kakaopay.payments.api.dto.ResponseDto;
-import com.kakaopay.payments.api.exception.CustomException;
 import com.kakaopay.payments.api.exception.ErrorCode;
 import com.kakaopay.payments.api.exception.InvalidDataException;
 import com.kakaopay.payments.api.service.PaymentService;
 import com.kakaopay.payments.api.util.Constants;
+import com.kakaopay.payments.api.util.StringUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -41,9 +41,8 @@ public class PaymentController {
         AmountInfo amountInfo = objectMapper.readValue(reqParam, AmountInfo.class);
         CardInfo cardInfo = objectMapper.readValue(reqParam, CardInfo.class);
 
-        //if(cardInfo != null)
-            //throw new InvalidDataException();
-            //throw new Exception();
+        if(StringUtils.isNull(cardInfo.getCardNumber()))    // 카드번호 존재 검증
+            throw new InvalidDataException(ErrorCode.OMISSION_REQUIRED_PARAM);
 
         RequestDto requestDto = RequestDto.builder()
                 .cardInfo(cardInfo)
@@ -65,6 +64,9 @@ public class PaymentController {
         String manageId = (String)requestMap.get("manageId");
         AmountInfo amountInfo = objectMapper.readValue(reqParam, AmountInfo.class);
 
+        if(StringUtils.isNull(manageId))    // 관리번호 존재 검증
+            throw new InvalidDataException(ErrorCode.OMISSION_REQUIRED_PARAM);
+
         RequestDto requestDto = RequestDto.builder()
                 .manageId(manageId)
                 .amountInfo(amountInfo)
@@ -83,6 +85,9 @@ public class PaymentController {
 
         Map<String, Object> requestMap = objectMapper.readValue(reqParam, new TypeReference<Map<String, Object>>(){});
         String manageId = (String)requestMap.get("manageId");
+
+        if(StringUtils.isNull(manageId))    // 관리번호 존재 검증
+            throw new InvalidDataException(ErrorCode.OMISSION_REQUIRED_PARAM);
 
         ResponseDto responseDto =  paymentService.processReadPayment(manageId);
         log.debug("###  responseDto = " + responseDto.toString());

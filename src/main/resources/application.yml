@@ -21,10 +21,13 @@ spring:
     hibernate:
       ddl-auto: create
 
-    #show-sql: true
-
     database-paltform: org.hibernate.dialect.H2Dialect
 
-logging.level.org.hibernate.SQL: debug
-logging.level.com.kakaopay.payments.api: debug
-spring.output.ansi.enabled: always
+  output:
+    ansi:
+      enabled: always
+
+logging:
+  level:
+    org.hibernate.SQL: debug
+    com.kakaopay.payments.api: debug
