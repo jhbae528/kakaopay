@@ -1,7 +1,5 @@
 package com.kakaopay.payments.api.exception;
 
-import org.springframework.http.HttpStatus;
-
 public class CustomException extends RuntimeException {
 
     private ErrorCode errorCode;

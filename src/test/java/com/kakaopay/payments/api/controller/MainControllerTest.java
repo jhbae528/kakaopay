@@ -196,7 +196,7 @@ class MainControllerTest {
      * @throws Exception
      */
     @Test
-    public void multiThreadCaseCancelAllTest() throws Exception{
+    public void multiThreadCaseTotalCancelTest() throws Exception{
 
         ExecutorService exeService = Executors.newFixedThreadPool(10);
 
@@ -235,7 +235,7 @@ class MainControllerTest {
      * @throws Exception
      */
     @Test
-    public void multiThreadCaseCancelTest() throws Exception{
+    public void multiThreadCasePartCancelTest() throws Exception{
 
         ExecutorService exeService = Executors.newFixedThreadPool(10);
 
@@ -326,6 +326,7 @@ class MainControllerTest {
         Map<String, Object> respCancelMap3 = caseCancel(mapCase1Cancel3, manageId);
         if(assertion){
             Assert.assertEquals(400, respCancelMap3.get("status"));
+            Assert.assertEquals("C004", respCancelMap3.get("code"));
         }
     }
     private void case1Cancel4(String manageId, boolean assertion) throws Exception{
@@ -333,6 +334,7 @@ class MainControllerTest {
         Map<String, Object> respCancelMap4 = caseCancel(mapCase1Cancel4, manageId);
         if(assertion){
             Assert.assertEquals(400, respCancelMap4.get("status"));
+            Assert.assertEquals("C004", respCancelMap4.get("code"));
         }
     }
     private void case1Cancel5(String manageId, boolean assertion) throws Exception{
@@ -348,6 +350,7 @@ class MainControllerTest {
         Map<String, Object> respCancelMap6 = caseCancel(mapCase1Cancel6, manageId);
         if(assertion){
             Assert.assertEquals(400, respCancelMap6.get("status"));
+            Assert.assertEquals("C004", respCancelMap6.get("code"));
         }
     }
     private void case1CancelAll(String manageId, boolean assertion) throws Exception{
@@ -382,6 +385,7 @@ class MainControllerTest {
         Map<String, Object> respCancelMap2 = caseCancel(mapCase2Cancel2, manageId);
         if(assertion){
             Assert.assertEquals(400, respCancelMap2.get("status"));
+            Assert.assertEquals("C004", respCancelMap2.get("code"));
         }
     }
     private void case2Cancel3(String manageId, boolean assertion) throws Exception{
@@ -414,6 +418,7 @@ class MainControllerTest {
         Map<String, Object> respCancelMap2 = caseCancel(mapCase3Cancel2, manageId);
         if(assertion){
             Assert.assertEquals(400, respCancelMap2.get("status"));
+            Assert.assertEquals("C004", respCancelMap2.get("code"));
         }
     }
     private void case3Cancel3(String manageId, boolean assertion) throws Exception{
